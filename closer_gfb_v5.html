@@ -1,0 +1,1591 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GFB — Closer IA</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --bg: #060912; --surface: #0d1420; --surface2: #131c2e;
+  --border: #1a2640; --green: #16c784; --amber: #f59e0b;
+  --red: #ef4444; --blue: #3b82f6; --purple: #8b5cf6;
+  --text: #e2e8f0; --muted: #64748b; --script-bg: #071210;
+}
+html, body { height:100%; overflow:hidden; }
+body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; font-size:14px; display:flex; flex-direction:column; }
+
+/* ══ HEADER ══ */
+.hdr { display:flex; align-items:center; gap:14px; padding:0 18px; height:56px; background:var(--surface); border-bottom:1px solid var(--border); flex-shrink:0; z-index:50; }
+.logo { font-family:'Syne',sans-serif; font-size:15px; font-weight:800; color:var(--green); letter-spacing:-.5px; white-space:nowrap; }
+.logo span { color:var(--text); }
+.lead-chip { flex:1; display:flex; align-items:center; gap:12px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:6px 14px; min-width:0; overflow:hidden; }
+.lc-name { font-family:'Syne',sans-serif; font-size:14px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.lc-meta { font-size:11px; color:var(--muted); white-space:nowrap; }
+.produto-pill { padding:3px 10px; border-radius:100px; font-size:10px; font-weight:700; font-family:'DM Mono',monospace; white-space:nowrap; flex-shrink:0; }
+.pill-pav { background:rgba(139,92,246,.18); color:#c084fc; border:1px solid rgba(139,92,246,.3); }
+.pill-bb  { background:rgba(245,158,11,.15); color:var(--amber); border:1px solid rgba(245,158,11,.3); }
+.pill-ac  { background:rgba(22,199,132,.15); color:var(--green); border:1px solid rgba(22,199,132,.3); }
+.timer { font-family:'DM Mono',monospace; font-size:19px; font-weight:600; min-width:72px; text-align:right; cursor:pointer; }
+.timer.warn { color:var(--amber); }
+.timer.danger { color:var(--red); animation:pulse 1s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+.btn-obj { display:flex; align-items:center; gap:6px; padding:8px 16px; background:rgba(239,68,68,.14); border:1px solid rgba(239,68,68,.35); border-radius:8px; color:#fca5a5; font-family:'DM Sans',sans-serif; font-size:13px; font-weight:700; cursor:pointer; transition:all .2s; white-space:nowrap; }
+.btn-obj:hover { background:rgba(239,68,68,.25); }
+
+/* ══ LAYOUT ══ */
+.layout { display:grid; grid-template-columns:210px 1fr 260px; flex:1; overflow:hidden; }
+
+/* ══ SIDEBAR ══ */
+.sidebar { background:var(--surface); border-right:1px solid var(--border); overflow-y:auto; padding:10px 0; }
+.sb-sect { font-family:'DM Mono',monospace; font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; padding:10px 14px 4px; }
+.ph-item { display:flex; align-items:center; gap:9px; padding:8px 14px; cursor:pointer; border-left:2px solid transparent; transition:all .15s; }
+.ph-item:hover { background:rgba(255,255,255,.04); }
+.ph-item.active { background:rgba(22,199,132,.08); border-left-color:var(--green); }
+.ph-item.done { opacity:.55; }
+.ph-icon { font-size:13px; width:18px; text-align:center; flex-shrink:0; }
+.ph-name { font-size:12px; font-weight:600; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:1; }
+.ph-item.active .ph-name { color:var(--green); }
+.ph-dur { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); white-space:nowrap; }
+.ph-ck { margin-left:auto; font-size:11px; color:var(--green); flex-shrink:0; display:none; }
+.ph-item.done .ph-ck { display:block; }
+
+/* ══ MAIN ══ */
+.main { overflow-y:auto; padding:22px 26px 60px; }
+
+/* phase header */
+.ph-hdr { display:flex; align-items:flex-start; gap:14px; margin-bottom:20px; }
+.ph-hdr-icon { font-size:30px; line-height:1; margin-top:4px; }
+.ph-tag { display:inline-flex; align-items:center; gap:5px; padding:2px 9px; background:rgba(22,199,132,.1); border:1px solid rgba(22,199,132,.2); border-radius:100px; font-family:'DM Mono',monospace; font-size:9px; color:var(--green); text-transform:uppercase; letter-spacing:.5px; margin-bottom:6px; }
+.ph-title { font-family:'Syne',sans-serif; font-size:21px; font-weight:800; line-height:1.2; margin-bottom:3px; }
+.ph-sub { font-size:12px; color:var(--muted); }
+
+/* slide ref */
+.slide-ref { display:flex; align-items:center; gap:8px; padding:7px 13px; background:rgba(59,130,246,.08); border:1px solid rgba(59,130,246,.2); border-radius:8px; margin-bottom:18px; font-size:12px; color:#93c5fd; }
+.slide-ref strong { font-family:'DM Mono',monospace; }
+
+/* script block */
+.script-blk { background:var(--script-bg); border:1px solid rgba(22,199,132,.2); border-left:3px solid var(--green); border-radius:10px; padding:18px 20px; margin-bottom:14px; }
+.s-lbl { font-family:'DM Mono',monospace; font-size:9px; font-weight:600; color:var(--green); letter-spacing:1px; text-transform:uppercase; display:block; margin-bottom:10px; }
+.s-txt { font-size:14.5px; line-height:1.9; color:#92c9a8; font-style:italic; }
+.s-txt strong { color:var(--text); font-style:normal; }
+.s-txt em { color:var(--amber); font-style:normal; }
+.s-txt mark { background:rgba(22,199,132,.15); color:var(--green); padding:1px 4px; border-radius:3px; font-style:normal; }
+.s-txt u { text-decoration:none; border-bottom:1px dashed var(--muted); color:var(--muted); font-style:normal; }
+
+/* listen block */
+.listen-blk { background:rgba(245,158,11,.06); border:1px solid rgba(245,158,11,.22); border-radius:10px; padding:14px 18px; margin-bottom:14px; }
+.l-lbl { font-family:'DM Mono',monospace; font-size:9px; font-weight:600; color:var(--amber); letter-spacing:1px; text-transform:uppercase; display:block; margin-bottom:8px; }
+.l-list { list-style:none; }
+.l-list li { padding:4px 0; border-bottom:1px solid rgba(245,158,11,.1); font-size:12.5px; color:#fcd34d; line-height:1.5; display:flex; gap:7px; }
+.l-list li::before { content:'👂'; font-size:11px; flex-shrink:0; margin-top:2px; }
+.l-list li:last-child { border-bottom:none; }
+
+/* info block */
+.info-blk { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:11px 15px; margin-bottom:12px; font-size:12.5px; color:var(--muted); line-height:1.6; }
+.info-blk.warn { background:rgba(245,158,11,.06); border-color:rgba(245,158,11,.2); color:#fcd34d; }
+.info-blk.danger { background:rgba(239,68,68,.06); border-color:rgba(239,68,68,.2); color:#fca5a5; }
+
+/* questions list */
+.q-list { display:flex; flex-direction:column; gap:8px; margin-bottom:14px; }
+.q-item { background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--purple); border-radius:8px; padding:12px 16px; }
+.q-num { font-family:'DM Mono',monospace; font-size:9px; color:var(--purple); text-transform:uppercase; letter-spacing:.5px; display:block; margin-bottom:4px; }
+.q-text { font-size:14px; line-height:1.6; color:var(--text); font-weight:500; font-style:italic; }
+.q-tip { font-size:11.5px; color:var(--muted); margin-top:5px; }
+
+/* nav buttons */
+.ph-nav { display:flex; gap:10px; margin-top:22px; }
+.btn-nxt { flex:1; padding:12px; background:var(--green); border:none; border-radius:8px; color:#000; font-family:'DM Sans',sans-serif; font-size:14px; font-weight:700; cursor:pointer; transition:all .2s; }
+.btn-nxt:hover { background:#13b573; }
+.btn-nxt.done-btn { background:var(--blue); }
+.btn-nxt.done-btn:hover { background:#2563eb; }
+.btn-prv { padding:12px 18px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--muted); font-family:'DM Sans',sans-serif; font-size:14px; cursor:pointer; transition:all .2s; }
+.btn-prv:hover { color:var(--text); }
+
+/* ══ RIGHT PANEL ══ */
+.panel { background:var(--surface); border-left:1px solid var(--border); overflow-y:auto; padding:14px; display:flex; flex-direction:column; gap:12px; }
+.pnl-sect { background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:13px; }
+.pnl-title { font-family:'Syne',sans-serif; font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:10px; }
+
+.data-row { display:flex; align-items:flex-start; gap:7px; padding:5px 0; border-bottom:1px solid var(--border); font-size:11.5px; }
+.data-row:last-child { border-bottom:none; }
+.d-lbl { font-family:'DM Mono',monospace; font-size:9.5px; color:var(--muted); min-width:68px; margin-top:1px; flex-shrink:0; }
+.d-val { color:var(--text); line-height:1.4; }
+.d-val.ok { color:var(--green); }
+.d-val.warn { color:var(--amber); }
+.d-val.bad { color:var(--red); }
+
+/* signals */
+.sig-item { display:flex; align-items:center; justify-content:space-between; padding:7px 0; border-bottom:1px solid var(--border); font-size:12px; gap:8px; }
+.sig-item:last-child { border-bottom:none; }
+.sig-lbl { color:var(--text); line-height:1.3; flex:1; }
+.sig-tog { display:flex; gap:4px; flex-shrink:0; }
+.sig-btn { padding:3px 9px; border-radius:5px; border:1px solid var(--border); background:transparent; font-size:10px; font-weight:700; cursor:pointer; transition:all .15s; font-family:'DM Mono',monospace; color:var(--muted); }
+.sig-btn.y.on { background:rgba(22,199,132,.2); border-color:var(--green); color:var(--green); }
+.sig-btn.n.on { background:rgba(239,68,68,.2); border-color:var(--red); color:var(--red); }
+
+/* temperature */
+.temp-opts { display:flex; gap:5px; margin-top:8px; }
+.temp-opt { flex:1; padding:6px 4px; border:1px solid var(--border); border-radius:7px; background:transparent; font-size:10px; cursor:pointer; font-family:'DM Sans',sans-serif; color:var(--muted); transition:all .15s; text-align:center; }
+.temp-opt:hover { color:var(--text); }
+.temp-opt.on-1 { background:rgba(239,68,68,.2); border-color:var(--red); color:var(--red); }
+.temp-opt.on-2 { background:rgba(245,158,11,.2); border-color:var(--amber); color:var(--amber); }
+.temp-opt.on-3 { background:rgba(22,199,132,.2); border-color:var(--green); color:var(--green); }
+.temp-opt.on-4 { background:rgba(59,130,246,.2); border-color:var(--blue); color:var(--blue); }
+.temp-bar { height:5px; background:var(--border); border-radius:3px; overflow:hidden; margin:8px 0 4px; }
+.temp-fill { height:100%; border-radius:3px; transition:width .3s, background .3s; }
+.temp-status { font-size:11px; color:var(--muted); text-align:center; }
+
+/* notes */
+.notes-ta { width:100%; background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:9px 11px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:12px; resize:vertical; min-height:72px; outline:none; transition:border-color .2s; }
+.notes-ta:focus { border-color:var(--green); }
+.notes-ta::placeholder { color:var(--muted); }
+
+/* anchor calc */
+.anchor-box { background:rgba(22,199,132,.07); border:1px solid rgba(22,199,132,.2); border-radius:10px; padding:13px 16px; }
+.anchor-row { display:flex; justify-content:space-between; padding:4px 0; font-size:12px; border-bottom:1px solid rgba(22,199,132,.1); }
+.anchor-row:last-child { border-bottom:none; padding-top:8px; font-size:13px; font-weight:700; }
+.anchor-row span:first-child { color:var(--muted); }
+.anchor-row span:last-child { color:var(--green); font-family:'DM Mono',monospace; }
+
+/* ══ LEAD SELECT ══ */
+.lead-sel { max-width:660px; margin:36px auto; padding:0 20px; }
+.ls-title { font-family:'Syne',sans-serif; font-size:26px; font-weight:800; margin-bottom:6px; }
+.ls-sub { color:var(--muted); font-size:13px; margin-bottom:24px; line-height:1.5; }
+.tab-row { display:flex; gap:4px; background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:4px; margin-bottom:18px; }
+.tab-btn { flex:1; padding:7px; border-radius:6px; border:none; background:transparent; color:var(--muted); font-family:'DM Sans',sans-serif; font-size:13px; font-weight:500; cursor:pointer; transition:all .2s; }
+.tab-btn.on { background:var(--surface2); color:var(--text); }
+.lead-cards { display:flex; flex-direction:column; gap:8px; margin-bottom:16px; }
+.lc-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px 18px; cursor:pointer; transition:all .2s; display:flex; align-items:center; gap:14px; }
+.lc-card:hover { border-color:var(--green); background:rgba(22,199,132,.05); }
+.lcc-info { flex:1; }
+.lcc-name { font-family:'Syne',sans-serif; font-size:15px; font-weight:700; margin-bottom:2px; }
+.lcc-meta { font-size:11.5px; color:var(--muted); }
+.lcc-score { font-family:'DM Mono',monospace; font-size:22px; font-weight:700; }
+.empty-state { text-align:center; padding:40px 20px; color:var(--muted); }
+.empty-icon { font-size:40px; margin-bottom:12px; }
+
+/* manual form */
+.mf { display:flex; flex-direction:column; gap:11px; }
+.mf-row { display:grid; grid-template-columns:1fr 1fr; gap:11px; }
+.mf-grp { display:flex; flex-direction:column; gap:5px; }
+.mf-lbl { font-size:10px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; }
+.mf-inp { background:var(--surface); border:1px solid var(--border); border-radius:7px; padding:9px 12px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:13px; outline:none; transition:border-color .2s; }
+.mf-inp:focus { border-color:var(--green); }
+.mf-ta { resize:vertical; min-height:60px; }
+.btn-go { width:100%; padding:13px; background:var(--green); border:none; border-radius:9px; color:#000; font-family:'DM Sans',sans-serif; font-size:15px; font-weight:700; cursor:pointer; transition:all .2s; margin-top:6px; }
+.btn-go:hover { background:#13b573; }
+
+/* ══ OBJECTION MODAL ══ */
+.overlay { position:fixed; inset:0; background:rgba(0,0,0,.75); display:none; align-items:center; justify-content:center; z-index:200; }
+.overlay.open { display:flex; }
+.modal { background:var(--surface); border:1px solid var(--border); border-radius:14px; width:92%; max-width:840px; max-height:88vh; display:flex; flex-direction:column; overflow:hidden; }
+.modal-hdr { display:flex; align-items:center; justify-content:space-between; padding:16px 22px; border-bottom:1px solid var(--border); }
+.modal-ttl { font-family:'Syne',sans-serif; font-size:17px; font-weight:800; color:#fca5a5; }
+.modal-sub { font-size:11px; color:var(--muted); margin-top:2px; }
+.btn-x { padding:5px 12px; background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--muted); cursor:pointer; font-size:13px; font-family:'DM Sans',sans-serif; }
+.modal-body { display:grid; grid-template-columns:230px 1fr; flex:1; overflow:hidden; min-height:0; }
+.obj-list { border-right:1px solid var(--border); overflow-y:auto; padding:10px 0; }
+.obj-it { padding:9px 16px; cursor:pointer; border-left:2px solid transparent; font-size:12.5px; font-weight:500; transition:all .15s; display:flex; align-items:center; gap:9px; line-height:1.4; }
+.obj-it:hover { background:rgba(255,255,255,.04); }
+.obj-it.on { background:rgba(239,68,68,.1); border-left-color:var(--red); color:#fca5a5; }
+.obj-detail { overflow-y:auto; padding:20px 22px; }
+.obj-title { font-family:'Syne',sans-serif; font-size:16px; font-weight:700; color:#fca5a5; margin-bottom:16px; }
+.obj-script { background:rgba(239,68,68,.07); border:1px solid rgba(239,68,68,.22); border-left:3px solid var(--red); border-radius:9px; padding:17px 19px; font-style:italic; font-size:14.5px; line-height:1.9; color:#fca5a5; margin-bottom:14px; }
+.obj-script strong { color:var(--text); font-style:normal; }
+.obj-script em { color:var(--amber); font-style:normal; }
+.obj-tip { background:rgba(245,158,11,.07); border:1px solid rgba(245,158,11,.2); border-radius:8px; padding:12px 16px; font-size:12.5px; color:#fcd34d; line-height:1.6; }
+.obj-tip strong { color:var(--amber); }
+
+/* ══ CLOSING SCREEN ══ */
+.close-scr { max-width:580px; margin:0 auto; padding:40px 20px; text-align:center; }
+.close-icon { font-size:60px; margin-bottom:18px; }
+.close-title { font-family:'Syne',sans-serif; font-size:26px; font-weight:800; margin-bottom:8px; }
+.close-sub { color:var(--muted); font-size:13px; margin-bottom:26px; line-height:1.6; }
+.close-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px; text-align:left; }
+.close-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px; }
+.close-card-lbl { font-size:9.5px; font-family:'DM Mono',monospace; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:5px; }
+.close-card-val { font-family:'Syne',sans-serif; font-size:15px; font-weight:700; }
+.close-actions { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+.btn-cls { padding:10px 22px; border-radius:8px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-family:'DM Sans',sans-serif; font-size:13px; font-weight:600; cursor:pointer; transition:all .2s; }
+.btn-cls:hover { border-color:var(--green); color:var(--green); }
+.btn-cls.main { background:var(--green); border-color:var(--green); color:#000; }
+.btn-cls.main:hover { background:#13b573; }
+
+/* ══ UPLOAD ZONE ══ */
+.upload-zone {
+  border: 2px dashed var(--border);
+  border-radius: 12px;
+  padding: 40px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .2s;
+  position: relative;
+  margin-bottom: 16px;
+}
+.upload-zone:hover, .upload-zone.drag-over {
+  border-color: var(--green);
+  background: rgba(22,199,132,.05);
+}
+.upload-zone input[type=file] {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  opacity: 0; cursor: pointer;
+}
+.upload-icon { font-size: 40px; margin-bottom: 12px; }
+.upload-title { font-family:'Syne',sans-serif; font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+.upload-sub { font-size: 12px; color: var(--muted); line-height: 1.6; }
+.upload-hint {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(59,130,246,.08); border: 1px solid rgba(59,130,246,.2);
+  border-radius: 8px; padding: 10px 14px;
+  font-size: 12px; color: #93c5fd; line-height: 1.5; margin-bottom: 16px;
+}
+.upload-status {
+  display: none; align-items: center; gap: 10px;
+  padding: 12px 16px; border-radius: 8px; font-size: 13px;
+  margin-bottom: 12px;
+}
+.upload-status.ok { display:flex; background:rgba(22,199,132,.1); border:1px solid rgba(22,199,132,.25); color:var(--green); }
+.upload-status.err { display:flex; background:rgba(239,68,68,.1); border:1px solid rgba(239,68,68,.25); color:#fca5a5; }
+.import-cards { display:flex; flex-direction:column; gap:8px; }
+
+::-webkit-scrollbar { width:4px; height:4px; }
+::-webkit-scrollbar-thumb { background:var(--border); border-radius:4px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hdr" id="hdr">
+  <div class="logo">GFB<span> · CLOSER IA</span></div>
+  <div class="lead-chip" id="lead-chip">
+    <div class="lc-name" id="chip-name">Nenhum lead carregado</div>
+    <div class="lc-meta" id="chip-meta">—</div>
+    <div class="produto-pill pill-pav" id="chip-pill" style="display:none"></div>
+  </div>
+  <div class="timer" id="timer" onclick="toggleTimer()" title="Clique para iniciar/pausar">00:00</div>
+  <div style="display:flex;gap:8px">
+    <button class="btn-obj" onclick="openObj()" id="obj-btn">⚡ OBJEÇÃO</button>
+  </div>
+</div>
+
+<!-- MAIN LAYOUT -->
+<div class="layout" id="layout" style="display:none">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sb-sect">Etapas da Reunião</div>
+    <div id="phase-list"></div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main" id="main-content"></div>
+
+  <!-- RIGHT PANEL -->
+  <div class="panel">
+    <!-- Lead data -->
+    <div class="pnl-sect">
+      <div class="pnl-title">📋 Dados do Lead</div>
+      <div id="lead-panel-data"></div>
+    </div>
+    <!-- Temperature -->
+    <div class="pnl-sect">
+      <div class="pnl-title">🌡 Temperatura do Lead</div>
+      <div class="temp-opts">
+        <button class="temp-opt" id="t1" onclick="setTemp(1)">❄️ Frio</button>
+        <button class="temp-opt" id="t2" onclick="setTemp(2)">😐 Morno</button>
+        <button class="temp-opt" id="t3" onclick="setTemp(3)">🔥 Quente</button>
+        <button class="temp-opt" id="t4" onclick="setTemp(4)">💳 Comprando</button>
+      </div>
+      <div class="temp-bar"><div class="temp-fill" id="temp-fill" style="width:0;background:var(--muted)"></div></div>
+      <div class="temp-status" id="temp-status">Aguardando avaliação</div>
+    </div>
+    <!-- Buy Signals -->
+    <div class="pnl-sect">
+      <div class="pnl-title">✅ Sinais de Compra</div>
+      <div id="signals-panel"></div>
+    </div>
+    <!-- Notes -->
+    <div class="pnl-sect">
+      <div class="pnl-title">📝 Anotações da Reunião</div>
+      <textarea class="notes-ta" id="meeting-notes" placeholder="Anote pontos importantes, objeções ouvidas, próximos passos..."></textarea>
+    </div>
+    <!-- Anchor calc -->
+    <div class="pnl-sect" id="anchor-panel" style="display:none">
+      <div class="pnl-title">⚓ Âncora de Valor</div>
+      <div class="anchor-box" id="anchor-box"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- LEAD SELECT SCREEN -->
+<div id="lead-sel-screen" class="main" style="overflow-y:auto;flex:1">
+  <div class="lead-sel">
+    <div class="ls-title">👋 Iniciar Reunião</div>
+    <div class="ls-sub">Carregue um lead qualificado pelo SDR ou preencha manualmente os dados do prospecto.</div>
+    <div class="tab-row">
+      <button class="tab-btn on" id="tab-sdr" onclick="switchTab('sdr')">📋 Mesmo Navegador</button>
+      <button class="tab-btn" id="tab-csv" onclick="switchTab('csv')">📄 Importar TXT</button>
+      <button class="tab-btn" id="tab-manual" onclick="switchTab('manual')">✍️ Manual</button>
+    </div>
+    <div id="tab-sdr-body">
+      <div class="upload-hint">
+        💡 Funciona quando o <strong>SDR IA</strong> e o <strong>Closer IA</strong> estão abertos no <strong>mesmo navegador</strong> na mesma máquina. Se estiver em computadores diferentes, use a aba "Importar CSV".
+      </div>
+      <div class="lead-cards" id="lead-cards-list"></div>
+    </div>
+    <div id="tab-csv-body" style="display:none">
+      <div class="upload-hint">
+        📄 No SDR IA, clique em <strong>"Exportar Script"</strong> para baixar o arquivo TXT do lead. Depois faça o upload aqui. Você pode importar <strong>um ou vários arquivos</strong> de uma vez.
+      </div>
+      <div id="upload-status" class="upload-status"></div>
+      <div class="upload-zone" id="upload-zone"
+           ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+        <input type="file" accept=".txt" multiple onchange="handleFileInput(event)">
+        <div class="upload-icon">📄</div>
+        <div class="upload-title">Arraste o arquivo TXT aqui</div>
+        <div class="upload-sub">ou clique para selecionar<br><span style="color:var(--muted);font-size:11px">Arquivo gerado pelo botão "Exportar Script" do SDR IA</span></div>
+      </div>
+      <div class="import-cards" id="import-cards-list"></div>
+    </div>
+    <div id="tab-manual-body" style="display:none">
+      <div class="mf">
+        <div class="mf-row">
+          <div class="mf-grp">
+            <label class="mf-lbl">Nome do prospecto *</label>
+            <input class="mf-inp" id="mf-nome" placeholder="Ex: João Silva" type="text">
+          </div>
+          <div class="mf-grp">
+            <label class="mf-lbl">Academia / Empresa *</label>
+            <input class="mf-inp" id="mf-empresa" placeholder="Ex: Academia FitCenter" type="text">
+          </div>
+        </div>
+        <div class="mf-row">
+          <div class="mf-grp">
+            <label class="mf-lbl">Faturamento Mensal</label>
+            <select class="mf-inp" id="mf-fat">
+              <option value="">Selecione...</option>
+              <option value="10000">Até R$ 10.000</option>
+              <option value="20000">R$ 10k a R$ 20k</option>
+              <option value="30000">R$ 20k a R$ 30k</option>
+              <option value="50000">R$ 30k a R$ 50k</option>
+              <option value="80000">R$ 50k a R$ 80k</option>
+              <option value="120000">R$ 80k a R$ 120k</option>
+              <option value="200000">R$ 120k a R$ 200k</option>
+              <option value="300000">Acima de R$ 200k</option>
+            </select>
+          </div>
+          <div class="mf-grp">
+            <label class="mf-lbl">Produto Indicado</label>
+            <select class="mf-inp" id="mf-produto">
+              <option value="Acelerador de Matrículas — R$1.997">Acelerador de Matrículas — R$1.997</option>
+              <option value="PAV — Programa de Aceleração de Vendas — R$24.997">PAV — R$24.997</option>
+              <option value="Mentoria Black Belt — R$60.000">Black Belt — R$60.000</option>
+            </select>
+          </div>
+        </div>
+        <div class="mf-grp">
+          <label class="mf-lbl">Maior desafio relatado</label>
+          <input class="mf-inp" id="mf-desafio" placeholder="Ex: muita evasão, pouca captação, equipe sem processo...">
+        </div>
+        <div class="mf-grp">
+          <label class="mf-lbl">Dor oculta / Motivação real</label>
+          <textarea class="mf-inp mf-ta" id="mf-dor" placeholder="Ex: quer provar para a família, quer viajar mais, sonho de expandir..."></textarea>
+        </div>
+        <div class="mf-grp">
+          <label class="mf-lbl">Observações do SDR</label>
+          <textarea class="mf-inp mf-ta" id="mf-obs" placeholder="Alertas, perfil decisor, urgência..."></textarea>
+        </div>
+        <button class="btn-go" onclick="startManual()">🚀 Iniciar Reunião →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- OBJECTION MODAL -->
+<div class="overlay" id="obj-overlay">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div>
+        <div class="modal-ttl">🚨 Gestão de Objeções</div>
+        <div class="modal-sub">Selecione a objeção e use o script exato abaixo</div>
+      </div>
+      <button class="btn-x" onclick="closeObj()">Fechar ✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="obj-list" id="obj-list"></div>
+      <div class="obj-detail" id="obj-detail">
+        <div style="text-align:center;padding:40px 20px;color:var(--muted)">
+          <div style="font-size:36px;margin-bottom:12px">👈</div>
+          <div>Selecione uma objeção na lista</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════
+let ld = null; // lead data
+let currentPhase = 0;
+let done = new Set();
+let signals = {};
+let temperature = 0;
+let timerSec = 0;
+let timerRunning = false;
+let timerInterval = null;
+
+// ══════════════════════════════════════════
+// LEAD DATA
+// ══════════════════════════════════════════
+function fatLabel(v) {
+  const m = {'10000':'Até R$10k','20000':'R$10-20k','30000':'R$20-30k','50000':'R$30-50k',
+             '80000':'R$50-80k','120000':'R$80-120k','200000':'R$120-200k','300000':'Acima R$200k'};
+  return m[v] || v || '—';
+}
+
+function pillClass(produto) {
+  if (!produto) return 'pill-ac';
+  if (produto.includes('Black')) return 'pill-bb';
+  if (produto.includes('PAV')) return 'pill-pav';
+  return 'pill-ac';
+}
+
+function ticketProduto(ld) {
+  if (!ld || !ld.produto) return 1997;
+  if (ld.produto.includes('Black')) return 60000;
+  if (ld.produto.includes('PAV')) return 24997;
+  return 1997; // Acelerador de Matrículas
+}
+function ticketParcelado(ld) {
+  if (!ld || !ld.produto) return '12x de R$66,41';
+  if (ld.produto.includes('Black')) return '12x de R$5.000';
+  if (ld.produto.includes('PAV')) return '12x no cartão';
+  return '12x de R$66,41'; // Acelerador
+}
+function ticketAVista(ld) {
+  if (!ld || !ld.produto) return 'R$797 à vista';
+  if (ld.produto.includes('Black')) return 'R$60.000 à vista';
+  if (ld.produto.includes('PAV')) return 'R$24.997 à vista';
+  return 'R$797 à vista'; // Acelerador
+}
+
+function anchorCalc(ld) {
+  if (!ld) return null;
+  const fat = parseInt(ld.faturamento) || 0;
+  const ticket = ticketProduto(ld);
+  if (!fat) return null;
+  const lucroEstimado = fat * 0.15; // assume 15% margem se não tiver
+  const payback = lucroEstimado > 0 ? (ticket / lucroEstimado).toFixed(1) : null;
+  return { fat, ticket, payback };
+}
+
+// ══════════════════════════════════════════
+// PHASES DATA
+// ══════════════════════════════════════════
+function getPhases() {
+  const nome = ld ? ld.nome : '[Nome]';
+  const empresa = ld ? ld.empresa : '[Academia]';
+  const desafio = ld ? (ld.desafio || '...') : '...';
+  const dor = ld ? (ld.dor || '') : '';
+  const fat = ld ? fatLabel(ld.faturamento) : '—';
+  const produto = ld ? (ld.produto || 'PAV') : 'PAV';
+  const ticket = ld ? `R$${ticketProduto(ld).toLocaleString('pt-BR')}` : 'R$24.997';
+  const isBlackBelt = produto.includes('Black');
+  const isPAV = produto.includes('PAV');
+
+  const parcelado = ticketParcelado(ld);
+  const avista = ticketAVista(ld);
+
+  return [
+    {
+      name: 'Condições de Cancelamento',
+      icon: '🚨',
+      dur: 'Pré-reunião',
+      slides: null,
+      cancelConditions: [
+        {
+          title: 'Sócio/cônjuge não apareceu',
+          rule: 'Estava combinado do sócio/esposa/marido participar, mas não apareceu.',
+          action: 'Reagendar',
+          actionType: 'reschedule',
+          message: null,
+        },
+        {
+          title: 'Sócio vai chegar atrasado',
+          rule: 'Espere o sócio chegar para começar a reunião. Caso o sócio atrase mais de 10 minutos, remarque. Caso contrário, não dará tempo de apresentar tudo e esperar pelo pagamento.',
+          action: 'Reagendar se +10 min',
+          actionType: 'reschedule',
+          message: '"O seu sócio está bem atrasado. Já se passaram mais de 10 minutos. Acho melhor marcarmos porque senão vou ter que fazer a nossa apresentação correndo e talvez não dê para tirar todas as dúvidas."',
+        },
+        {
+          title: 'Candidato está no carro / em movimento',
+          rule: 'Remarque. O candidato e o sócio têm que estar 100% presente para a apresentação. Caso contrário, não estarão conectados o suficiente para entenderem todo o programa e o valorizarem o suficiente.',
+          action: 'Reagendar',
+          actionType: 'reschedule',
+          message: '"Eu estou vendo que você está no carro. Vamos remarcar nossa reunião, eu vou precisar de toda a sua atenção para eu explicar para você o programa e tirar todas as suas dúvidas. Além disso, a internet pode oscilar o sinal pode cair no meio da explicação. Será mais produtivo se remarcarmos."',
+        },
+        {
+          title: 'Candidato está atrasado para entrar',
+          rule: 'Espere o candidato por 5 minutos. Mande mensagem no WhatsApp para avisá-lo do link (ele pode ter perdido o link) e que você já está esperando ele na sala. Se atrasar mais de 10 minutos, cancele a reunião.',
+          action: 'Aguardar 5 min → WhatsApp → Cancelar se +10 min',
+          actionType: 'cancel',
+          message: `<b>Mensagem de espera (WhatsApp):</b><br>"Olá, {nome do candidato}, Já estou na sala esperando para nossa reunião que foi combinada. Caso esteja sem o link, vou lhe enviar por aqui de novo: {link de acesso}"<br><br><b>Mensagem de cancelamento (+10 min):</b><br>"Olá, {nome do candidato}. Esperei por 10 minutos e realmente não poderemos fazer nossa reunião."`,
+        },
+        {
+          title: 'Candidato tem menos de 60 minutos disponíveis',
+          rule: 'Remarque, caso contrário, não será possível cumprir todas as etapas da apresentação.',
+          action: 'Reagendar',
+          actionType: 'reschedule',
+          message: '"Entendo. Vamos remarcar então nossa reunião porque eu realmente vou precisar de 1 hora do seu tempo, como tínhamos combinado antes. Vou lhe enviar pelo WhatsApp algumas opções de horário."',
+        },
+      ],
+    },
+    {
+      name: 'Abertura & Apresentação',
+      icon: '👋',
+      dur: '1-2 min',
+      slides: null,
+      script: `Olá, <strong>${nome}</strong>! Meu nome é [seu nome], sou consultor do time do Eduardo Lustosa e vou te direcionar da melhor forma possível.<br><br>
+Você está bem? Tudo tranquilo de onde você fala?<br><br>
+<em>[Aguardar resposta — comentar algo que cause relacionamento com a cidade/região]</em><br><br>
+<mark>Você tem a próxima hora livre agora, correto?</mark><br><br>
+<em>[Se não tiver 1 hora → remarcar.]</em>`,
+      listen: [
+        `Confirmar que tem 1 hora disponível — se não tiver, remarcar`,
+        `Está em casa/escritório ou em movimento? (carro = remarcar)`,
+        `Todos os decisores estão presentes?`,
+        `Tom de voz: ansioso, entusiasmado, desconfiado?`
+      ],
+      signals: [
+        { id: 'hora-livre', label: 'Confirmou 1h livre' },
+        { id: 'decisores-ok', label: 'Todos decisores presentes' },
+      ]
+    },
+    {
+      name: 'Relacionamento',
+      icon: '🤝',
+      dur: '3-5 min',
+      slides: null,
+      questions: [
+        { n:1, q:`De onde você fala? Qual cidade?`, tip:`Comentar algo que cause relacionamento com a cidade/região. Cria rapport inicial.` },
+        { n:2, q:`Como você entrou no ramo de academias? Como surgiu essa ideia?`, tip:`Escute a história. Identifique motivação emocional — pode usar no fechamento.` },
+        { n:3, q:`Há quanto tempo você tem a academia?`, tip:`Referência de maturidade do negócio. Academia nova = problemas diferentes de academia antiga.` },
+        { n:4, q:`Você é formado em educação física, ou veio de outra área?`, tip:`Define o perfil: técnico (quer resultado) ou empresarial (quer dinheiro). Adapte linguagem.` },
+      ],
+      listen: [
+        `Identificar motivação emocional por trás de ter a academia`,
+        `Nível de conhecimento empresarial vs conhecimento técnico`,
+        `Tem sócio? Cônjuge envolvido no negócio?`,
+        `Abertura ao diálogo — está falando ou só respondendo?`
+      ],
+      signals: [
+        { id: 'desafio-ok', label: 'Rapport estabelecido' },
+        { id: 'dor-oculta', label: 'Motivação emocional identificada' },
+      ]
+    },
+    {
+      name: 'Diagnóstico',
+      icon: '🔍',
+      dur: '8-12 min',
+      slides: null,
+      questions: [
+        { n:1, q:`Quantos alunos você tem hoje?`, tip:`Referência: abaixo de 300 = fase de crescimento. 300-1.000 = consolidação. Acima de 1.000 = escala. Anote o número exato.` },
+        { n:2, q:`Qual é o seu ticket médio mensal?`, tip:`Interior: em torno de R$70-100. Capital: R$100-150+. Multiplicar por número de alunos para estimar faturamento atual.` },
+        { n:3, q:`Qual foi o máximo de alunos que você chegou a ter? O que aconteceu?`, tip:`Revela o teto percebido pelo próprio dono — e os problemas que causaram a queda. Ouro para o diagnóstico.` },
+        { n:4, q:`Quantos metros tem a academia? Quantos alunos no máximo você acredita que consegue ter?`, tip:`Verifica se o teto é físico ou operacional. Na maioria das vezes é operacional — o espaço suporta mais.` },
+        { n:5, q:`Como funciona a sua recepção? A cada 10 pessoas que chegam para conhecer, quantas fecham matrícula?`, tip:`Mercado médio: 3 em 10. Método LG: 6-7 em 10. Se ele não sabe a taxa → não controla o negócio.` },
+        { n:6, q:`Em média, quanto tempo o aluno fica com você antes de cancelar?`, tip:`Mercado: 3 meses. Método LG: 11 meses. Quanto menor a retenção, mais refém de matrícula nova ele fica.` },
+      ],
+      listen: [
+        `Anotar: nº alunos, ticket médio, conversão, evasão`,
+        `Fazer conta mental do faturamento estimado`,
+        `Observar se ele controla indicadores — ou opera no escuro`,
+        `Identificar o maior gargalo: visitação, conversão ou retenção`
+      ],
+      signals: [
+        { id: 'numeros-coletados', label: 'Coletou os 4 indicadores-chave' },
+        { id: 'roi-calculado', label: 'Identificou o gargalo principal' },
+      ]
+    },
+    {
+      name: 'Resultado do Diagnóstico',
+      icon: '📊',
+      dur: '3-4 min',
+      slides: null,
+      script: `<strong>${nome}</strong>, deixa eu te mostrar o que os números que você me deu significam.<br><br>
+<em>[Estimar o faturamento desejado: número de alunos × ticket médio]</em><br><br>
+Você tem [X alunos] com ticket de [R$Y]. Isso é aproximadamente [R$Z por mês]. O seu teto, com a academia que você tem, seria [R$W]. <strong>A distância entre onde você está e onde você quer chegar é [R$diferença].</strong><br><br>
+E sabe o que causa isso? Não é falta de esforço. É que <mark>para ter dinheiro novo, tem que ter fato novo.</mark> O que te trouxe até aqui não vai te levar para o próximo nível. Todas as decisões que você tomou até agora vão te levar ao mesmo lugar — então você precisa criar uma lógica nova para avançar.<br><br>
+<strong>Faz sentido para você?</strong>`,
+      listen: [
+        `Ele concorda com a análise dos números?`,
+        `Reage com resignação ou com urgência?`,
+        `Faz alguma objeção sobre o diagnóstico?`
+      ],
+      signals: [
+        { id: 'implicacao-ativa', label: 'Sentiu o peso do gap' },
+      ]
+    },
+    {
+      name: 'Solução — Visitação',
+      icon: '🚶',
+      dur: '4-6 min',
+      slides: null,
+      script: `<strong>PERGUNTA CHAVE: Como é o seu canal de venda hoje? É indicação? Deixa eu entender melhor.</strong><br><br>
+Hoje, se você quisesse dobrar o número de alunos, você teria previsibilidade de como fazer isso?<br><br>
+<em>[Escutar resposta]</em><br><br>
+Então deixa eu te falar sobre como a gente resolve o problema de visitação.<br><br>
+A <em>última</em> coisa que a gente indica é tráfego pago. Sabe por quê? <strong>O custo de aquisição via tráfego pago em média é R$350 por aluno</strong> — e se a sua retenção for baixa, a conta não fecha. Já sabia disso?<br><br>
+O que fazemos são <strong>18 canais de visitação mapeados</strong> no nosso calendário anual. Por exemplo:<br>
+• <em>Parcerias locais</em> — pizzaria com 200+ pedidos por fim de semana, caixa com QR code.<br>
+• <em>Pintar o muro certo</em> → 5 visitações na primeira semana.<br>
+• <em>Bater na curiosidade</em> das pessoas certas.<br>
+• <em>Reforma de placa</em> com negócios locais.<br><br>
+Por isso a gente consegue abrir uma rede atrás da outra com previsibilidade.<br><br>
+<strong>Faz sentido? O que achou?</strong><br><br>
+<em>[Se resistir muito a todas as ideias:] "Estou sentindo que você não está muito aberto. Se estiver perdendo o meu tempo ou o seu, podemos encerrar por aqui."</em>`,
+      listen: [
+        `Canal atual: só indicação? Tráfego pago? Orgânico?`,
+        `Reagiu a alguma estratégia específica — qual?`,
+        `Demonstrou interesse genuíno ou ceticismo?`,
+        `Está engajado ou só respondendo por educação?`
+      ],
+      signals: [
+        { id: 'pilar-visitacao', label: 'Interesse em Visitação' },
+      ]
+    },
+    {
+      name: 'Solução — Time',
+      icon: '👥',
+      dur: '3-5 min',
+      slides: null,
+      script: `Hoje você que faz tudo na academia? Você tem time?<br><br>
+<em>[Escutar resposta]</em><br><br>
+<strong>O que acontece com a sua academia se você ficar doente 30 dias?</strong><br><br>
+<em>[Aguardar resposta]</em><br><br>
+A sua hora tem que ser a mais cara da academia. Você precisa se fazer uma única pergunta: <mark>O que somente eu posso fazer?</mark> O resto, você delega. Já tinha pensado assim antes?<br><br>
+<em>[Aguardar resposta]</em><br><br>
+Essa é a diferença de uma empresa que cresce e outra que não cresce — a formação de time.<br><br>
+Um estagiário, por exemplo, pode desbloquear o seu tempo para você focar no que realmente faz crescer a academia. O estagiário tem que fazer 3 coisas: <strong>vender, prospectar ou produzir conteúdo</strong>. Sem tempo ocioso. Concorda comigo?`,
+      listen: [
+        `Opera sozinho ou tem equipe?`,
+        `Reage bem à ideia de delegar ou tem resistência?`,
+        `Quanto do dia ele passa em tarefas operacionais?`
+      ],
+      signals: [
+        { id: 'equipe-estrutura', label: 'Aberto a estruturar time' },
+      ]
+    },
+    {
+      name: 'Solução — Conversão',
+      icon: '💡',
+      dur: '4-5 min',
+      slides: null,
+      script: `Deixa eu entender a estrutura da recepção. Como funciona? Só você? Quem atende quando alguém chega?<br><br>
+<em>[Escutar resposta]</em><br><br>
+<strong>Se entram 30 pessoas e você fecha só 10, como você enxerga as outras 20 indo treinar no concorrente?</strong><br><br>
+De nada adianta aumentar a visitação se a conversão for baixa — é colocar água num balde furado.<br><br>
+Você treina o seu time toda semana? <strong>Quanto você acredita que está perdendo por não treinar o seu time semanalmente?</strong><br><br>
+<em>[Aguardar resposta]</em><br><br>
+Para converter da forma correta tem que controlar esses indicadores — isso é <em>gestão</em>.<br><br>
+Técnicas simples que usamos: <em>"Se matricule e ganhe um fone"</em>, <em>"concorra a uma bicicleta"</em>. E o mais importante: o perfil certo de contratação — influente e dominante. O resto dificilmente performa em venda.<br><br>
+<strong>Como funcionam as metas do seu time hoje?</strong> <em>[Escutar → ] "No nosso modelo temos meta individual por venda e meta em grupo. Vendedor que menos vende por 3 meses seguidos, está fora."</em>`,
+      listen: [
+        `Quem opera a recepção hoje?`,
+        `Faz treinamento de vendas regular?`,
+        `Tem sistema de metas ou trabalha no improviso?`
+      ],
+      signals: [
+        { id: 'pilar-conversao', label: 'Interesse em Conversão' },
+        { id: 'fez-conta', label: 'Calculou perda por baixa conversão' },
+      ]
+    },
+    {
+      name: 'Solução — Retenção',
+      icon: '🔒',
+      dur: '3-4 min',
+      slides: null,
+      script: `Em média, quanto tempo o aluno fica com você antes de cancelar?<br><br>
+<em>[Escutar resposta]</em><br><br>
+<strong>Você percebe que quanto menor a retenção, mais refém de matrícula nova você fica?</strong><br><br>
+No nosso modelo, o time acompanha todo aluno que aparece menos de 2 vezes por semana. Com isso a gente consegue elevar a permanência média para <strong>11 meses</strong>.<br><br>
+<strong>Se você não acompanha quem falta, o que acontece com esses alunos?</strong><br><br>
+<em>[Aguardar resposta]</em><br><br>
+Fazemos também campanhas de indicação — aluno indica, indicação se matricula, aluno ganha um fone. E ainda fazemos <em>upgrade de plano</em>: aumenta receita sem precisar de novo aluno.<br><br>
+<em>[Tour pela academia — se aplicável, mostrar estrutura real de operação]</em>`,
+      listen: [
+        `Taxa de retenção atual — está baixo de 6 meses?`,
+        `Tem algum processo de acompanhamento de faltosos?`,
+        `Faz alguma campanha de indicação hoje?`
+      ],
+      signals: [
+        { id: 'pilar-retencao', label: 'Interesse em Retenção' },
+        { id: 'se-visualizou', label: 'Se visualizou com retenção de 11 meses' },
+      ]
+    },
+    {
+      name: 'Qualificação Final',
+      icon: '🧠',
+      dur: '2-3 min',
+      slides: null,
+      script: `Antes de eu prosseguir, preciso te fazer uma pergunta importante.<br><br>
+<strong>Você é uma pessoa treinável?</strong><br><br>
+<em>[Aguardar resposta]</em><br><br>
+<strong>Por que você se considera uma pessoa treinável?</strong><br><br>
+<em>[Aguardar resposta — deixe ele provar para você]</em><br><br>
+Entendo. Eu pergunto isso porque antes a gente passava 1 hora numa reunião e a pessoa saía sem executar absolutamente nada. Mas como você mesmo disse que é uma pessoa treinável e <em>provou isso para mim</em>, eu vou te mostrar a nossa solução. Ok?<br><br>
+<em>[Aguardar confirmação — essa pergunta cria comprometimento psicológico antes do pitch]</em>`,
+      listen: [
+        `Resposta à pergunta — é convincente ou vaga?`,
+        `Demonstra comprometimento real ou só concorda para continuar?`,
+        `Tom de voz muda aqui — mais engajado ou mais defensivo?`
+      ],
+      signals: [
+        { id: 'programa-interesse', label: 'Comprometeu-se como treinável' },
+      ]
+    },
+    {
+      name: 'Apresentação da Solução',
+      icon: '🎯',
+      dur: '3-5 min',
+      slides: isPAV ? 'Slide 72' : isBlackBelt ? 'Slide 75' : null,
+      script: isPAV || isBlackBelt ?
+`Nós temos ${isBlackBelt ? 'a <strong>Mentoria Black Belt</strong>' : 'o <strong>PAV — Programa de Aceleração de Vendas</strong>'} — que reúne as estratégias que o Eduardo usou para sair de 300 para mais de <strong>7.000 alunos</strong>. Com esse programa você vai ter acesso à metodologia completa para transformar a sua academia — mais alunos e mais lucro.<br><br>
+${isBlackBelt ? '12 meses de acompanhamento próximo, direto com o Eduardo. Você não recebe conteúdo — você implementa, com suporte real.' :
+'12 módulos: Caixa rápido → Caçada nas redes → Precificação lucrativa → Campanha de indicação → <strong>Agente de IA de conversão</strong> → Automação → Novas fontes de receita → Retenção → Estruturação comercial → Plano estratégico de guerra.'}` :
+`Nós temos um <strong>pack de aulas</strong> que reúne algumas das várias estratégias que o Eduardo Lustosa utilizou para sair de 300 para mais de <strong>7.000 alunos</strong>.<br><br>
+Com esse pack você vai ter acesso a essa metodologia e transformar a sua academia — <em>mais alunos e mais lucro</em>.<br><br>
+Hoje nosso pack de aulas está de <strong>R$1.497 — por apenas ${parcelado}</strong> (${avista}).<br><br>
+<mark>São <strong>12X DE R$208,08</strong> ou <strong>R$2.497</strong> — cartão ou PIX?</mark><br><br>
+<em style="color:var(--red)">🔇 FICAR CALADO. Quem fala primeiro perde.</em><br><br>
+<em>[Se não colar — segurar o preço e falar:]</em><br>
+<mark>Eu faço <strong>12X DE R$166,41</strong> ou <strong>R$1.997</strong> — cartão ou PIX?</mark><br><br>
+<em style="color:var(--red)">🔇 FICAR CALADO.</em>`,
+      listen: [
+        `Primeira reação ao pitch — entusiasmo, silêncio, objeção?`,
+        `Para PAV/Black Belt: perguntou sobre detalhes do programa?`,
+        `Para Acelerador: reação imediata ao preço?`,
+        `Olhou para o lado, ficou quieto, fez cara feia?`
+      ],
+      signals: [
+        { id: 'credibilidade-ok', label: 'Aceitou a autoridade do método' },
+        { id: 'perguntou-como', label: 'Perguntou sobre como funciona' },
+      ]
+    },
+    ...(isPAV || isBlackBelt ? [{
+      name: 'Investimento',
+      icon: '💳',
+      dur: '2-3 min',
+      slides: 'Slide 73 a 74',
+      script: `<em>[Mostre o slide sobre os riscos de fazer sozinho]</em><br><br>
+Você pode tentar continuar do jeito que está. Mas me diz: até hoje, sem um processo estruturado, o que aconteceu com a sua academia?<br><br>
+<em>[Pausa. Deixe o silêncio agir.]</em><br><br>
+O investimento para entrar no <strong>${produto}</strong> é de <strong>${ticket}</strong>.<br><br>
+São apenas <strong>5 academias por turma</strong> — o Eduardo acompanha pessoalmente e não dá para ser com muito mais.<br><br>
+Você me disse que seu maior desafio é <strong>${desafio}</strong>. <strong>Quanto esse problema está te custando por mês?</strong> E quanto custa o programa na comparação?<br><br>
+<mark>São <strong>12X DE R$208,08</strong> ou <strong>R$2.497</strong> — cartão ou PIX?</mark><br><br>
+<em style="color:var(--red)">🔇 FICAR CALADO. Quem fala primeiro perde.</em><br><br>
+<em>[Se não colar — segurar o preço e falar:]</em><br>
+<mark>Eu faço <strong>12X DE R$166,41</strong> ou <strong>R$1.997</strong> — cartão ou PIX?</mark><br><br>
+<em style="color:var(--red)">🔇 FICAR CALADO.</em>`,
+      listen: [
+        `Primeira reação ao preço — suspiro, silêncio, cara feia?`,
+        `Perguntou sobre parcelamento?`,
+        `Fez a comparação com o custo do problema?`
+      ],
+      signals: [
+        { id: 'preco-ok', label: 'Aceitou o investimento sem objeção' },
+        { id: 'parcelamento', label: 'Perguntou sobre parcelamento' },
+        { id: 'roi-comparou', label: 'Comparou com custo do problema' },
+      ]
+    }] : []),
+    {
+      name: 'Fechamento',
+      icon: '🤑',
+      dur: '5-10 min',
+      slides: null,
+      script: `<em>[Se chegou até aqui sem objeção:]</em><br><br>
+<mark>"Ótimo. Vamos resolver o pagamento agora."</mark><br><br>
+<em>[Se hesitar:]</em> <mark>"Me diz o que está te impedindo de dizer sim agora?"</mark><br><br>
+Se surgir objeção → use o botão <strong>⚡ OBJEÇÃO</strong> acima.<br><br>
+─────────────────────────────────────<br><br>
+<strong>Formas de pagamento:</strong><br>
+${isBlackBelt ? '• 12x de R$5.000 no cartão<br>• R$60.000 à vista (condição especial)' :
+isPAV ? '• À vista: R$24.997 (PIX ou cartão)<br>• 12x no cartão<br>• Entrada 50% + restante parcelado' :
+`• ${avista} (PIX ou cartão)<br>• ${parcelado}<br>• Sem cartão/limite? Entrada 50% = R$747 + 12x de R$41,60<br>• Entrada 30% + restante`}<br><br>
+<em>Após fechamento: agendar onboarding / acesso ao programa.</em>`,
+      listen: [
+        `Qual sinal de compra está mais ativo agora?`,
+        `Pediu para ligar para alguém → decisor extra → use objeção Sócio`,
+        `Tom: entusiasmado ou "vou pensar"?`
+      ],
+      signals: [
+        { id: 'fechou', label: '✅ FECHOU O NEGÓCIO' },
+        { id: 'agendou-follow', label: 'Agendou follow-up' },
+        { id: 'nao-fechou', label: '❌ Não fechou hoje' },
+      ]
+    },
+  ];
+}
+
+// ══════════════════════════════════════════
+// OBJECTIONS DATA
+// ══════════════════════════════════════════
+function getObjections() {
+  const nome = ld ? ld.nome : '[Nome]';
+  const desafio = ld ? (ld.desafio || 'seu maior desafio') : 'seu maior desafio';
+  const dor = ld ? (ld.dor || 'o seu objetivo de negócio') : 'o seu objetivo';
+  const produto = ld ? (ld.produto || 'o programa') : 'o programa';
+  const ticket = ld ? `R$${ticketProduto(ld).toLocaleString('pt-BR')}` : 'R$24.997';
+
+  return [
+    {
+      id:'pensar', label:'🤔 Preciso pensar',
+      title:`"Preciso pensar"`,
+      script:`Claro que você precisa pensar — essa é uma decisão importante e eu respeito isso.<br><br>
+Mas me ajuda a entender: o que <strong>exatamente</strong> você precisa pensar? <em>[pausa]</em><br><br>
+É sobre o <strong>programa em si</strong> — você ficou com alguma dúvida sobre como funciona?<br><br>
+Ou é sobre o <strong>investimento</strong> — a questão financeira?<br><br>
+Ou é sobre se vai <strong>funcionar para o seu caso específico</strong>?<br><br>
+<em>[Deixe ele responder. A objeção real está aí. Só então volte ao script específico.]</em>`,
+      tip:`"Preciso pensar" é quase sempre uma objeção disfarçada. Nunca aceite no valor de face. Faça a pergunta e espere — a real objeção vai aparecer.`
+    },
+    {
+      id:'caro', label:'💸 Está caro / sem dinheiro',
+      title:`"Está caro" ou "Não tenho dinheiro"`,
+      script:`Entendo. Me diz: caro <strong>em relação a quê</strong>?<br><br>
+Porque você me disse que seu maior desafio é <strong>${desafio}</strong>. Quanto esse problema está te custando por mês? <em>[pausa]</em><br><br>
+Se você não resolver isso nos próximos 12 meses, qual o custo total para a sua academia?<br><br>
+<em>[Deixe o lead calcular.]</em><br><br>
+O programa custa <strong>${ticket}</strong>. O custo do problema que você descreveu, em 12 meses, é... maior ou menor?<br><br>
+<em>[Se disser que não tem dinheiro:]</em><br>
+<strong>${nome}</strong>, você tem limite no cartão disponível? Porque a maioria dos empresários que me falam isso têm o limite — o que não têm é a decisão de onde investir. E você me disse que quer <strong>${dor || 'crescer sua academia'}</strong>. Quando isso vai acontecer se você não mudar nada hoje?`,
+      tip:`Nunca defenda o preço. Faça a comparação com o custo do problema. O programa precisa parecer barato comparado com o custo da inação.`
+    },
+    {
+      id:'socio', label:'👥 Precisa falar com sócio/cônjuge',
+      title:`"Preciso falar com meu sócio / cônjuge"`,
+      script:`Faz todo o sentido — essa é uma decisão que impacta a família inteira.<br><br>
+Por isso que na qualificação, a gente pediu que todas as pessoas envolvidas na decisão participassem dessa reunião.<br><br>
+Você consegue chamar ele(a) agora? <em>[Se sim → aguarde. Se não:]</em><br><br>
+<strong>${nome}</strong>, me diz uma coisa: se você pudesse tomar essa decisão <strong>sozinho</strong>, você entraria no programa hoje?<br><br>
+<em>[Se a resposta for sim:]</em><br>
+Então o que falta é a confirmação do seu sócio/cônjuge. Posso fazer uma apresentação rápida para ele(a) agora por vídeo? Ou quando é o melhor horário para os dois participarem?<br><br>
+<em>[Nunca marque um follow-up sem data e hora definidas.]</em>`,
+      tip:`Se ele disse "sim, eu entraria sozinho", você não tem objeção de compra — você tem um problema de logística. Resolva a logística.`
+    },
+    {
+      id:'funcionar', label:'🤷 Não sei se vai funcionar',
+      title:`"Não sei se vai funcionar para mim"`,
+      script:`Entendo essa preocupação — e ela é justa.<br><br>
+Me diz: o que te faz achar que no seu caso pode ser diferente?<br><br>
+<em>[Escute a resposta. Identifique a crença específica.]</em><br><br>
+Olha, todos os casos que te mostrei hoje — a Ultra Cruzeiro, a academia que saiu de 200 para 600 alunos, a 1RM que foi de 1 unidade com prejuízo para 3 unidades lucrativas — todos eles disseram exatamente isso antes de entrar.<br><br>
+E todos eles têm o mesmo problema que você: <strong>${desafio}</strong>.<br><br>
+Além disso, você tem a <strong>garantia</strong>: se o método não funcionar para você, o Eduardo devolve o investimento. Então o único risco real é o risco de <strong>não</strong> ter implementado antes.`,
+      tip:`A objeção de funcionalidade é sobre crença e risco percebido. Use prova social específica (caso parecido com o dele) + reforce a garantia.`
+    },
+    {
+      id:'tempo', label:'⏰ Não tenho tempo agora',
+      title:`"Não tenho tempo para implementar"`,
+      script:`Isso é muito comum — e entendo perfeitamente.<br><br>
+Mas me diz: o programa foi desenhado para funcionar <strong>com a sua equipe</strong>, não com você fazendo tudo. O seu papel é liderar o processo, não executar cada ação.<br><br>
+E pensa comigo: você tem tempo para continuar com o problema de <strong>${desafio}</strong>?<br><br>
+Porque o problema não para enquanto você está ocupado. Ele cresce. Os concorrentes continuam avançando. Os alunos continuam evadindo.<br><br>
+A questão não é se você tem tempo. A questão é: você pode se dar ao luxo de <strong>não</strong> ter isso resolvido?`,
+      tip:`"Não tenho tempo" é frequentemente "não vejo prioridade". Mude o enquadramento: o programa resolve o problema que está roubando o tempo dele.`
+    },
+    {
+      id:'info', label:'📧 Me manda mais informações',
+      title:`"Me manda mais informações"`,
+      script:`Claro, posso te mandar. Mas antes deixa eu perguntar:<br><br>
+Você viu hoje toda a metodologia, os resultados reais, os cases de sucesso e a garantia.<br><br>
+O que você precisa saber que <strong>ainda não foi apresentado</strong>?<br><br>
+<em>[Espere a resposta.]</em><br><br>
+Porque se eu te mandar um PDF, você vai ter as mesmas informações que tem agora — mais texto para ler numa semana ocupada.<br><br>
+O que está <strong>realmente</strong> te impedindo de tomar a decisão hoje?<br><br>
+<em>[A real objeção vai aparecer. Trate essa objeção específica.]</em>`,
+      tip:`"Me manda mais informações" é um polite no. A informação não é o problema — a decisão é. Descubra a real barreira.`
+    },
+    {
+      id:'proximo', label:'📅 Vou esperar o próximo mês',
+      title:`"Vou esperar / Próximo mês está melhor"`,
+      script:`${nome}, me diz uma coisa: o que vai mudar no próximo mês que não está acontecendo agora?<br><br>
+<em>[Escute. Se a resposta for vaga → continue:]</em><br><br>
+Você me disse que seu maior desafio é <strong>${desafio}</strong>. Em quanto tempo esse problema já existe?<br><br>
+<em>[Ele vai citar um período.]</em><br><br>
+Então já faz [X] meses/anos com esse problema — e no próximo mês vai ser diferente por quê?<br><br>
+Olha, vamos ser honestos: o melhor momento para ter resolvido isso foi há X meses. O <strong>segundo melhor momento é agora</strong>.<br><br>
+Lembra: são só 5 vagas por turma. Se eu deixar a sua para o próximo mês, não posso garantir que vai ter vaga disponível.`,
+      tip:`Urgência real + escassez real (5 vagas). Não force — deixe a lógica do tempo trabalhar. A pergunta "o que muda?" é a mais poderosa.`
+    },
+    {
+      id:'diferente', label:'🏠 Minha academia é diferente',
+      title:`"Minha academia é diferente / Meu caso é especial"`,
+      script:`Toda academia é diferente — e isso faz sentido.<br><br>
+Me diz o que você acha que faz o seu caso ser diferente?<br><br>
+<em>[Escute. Depois:]</em><br><br>
+A metodologia LG não é um curso de receita pronta. É um <strong>sistema adaptável</strong> — os 3 pilares funcionam em academia de bairro pequena, em studio, em academia de grande porte.<br><br>
+A Ultra Cruzeiro tem uma realidade. A academia que saiu de 200 para 600 alunos tem outra. A 1RM tem outra.<br><br>
+O que eles têm em comum? <strong>Os 3 indicadores: visitação, conversão e retenção.</strong> Toda academia opera com esses 3 pilares — a diferença é se eles são gerenciados ou não.`,
+      tip:`Valide a unicidade dele antes de confrontar. Nunca diga "não, seu caso não é diferente". Mostre que a metodologia é adaptável, não genérica.`
+    },
+    {
+      id:'jaatentei', label:'🔄 Já tentei algo parecido',
+      title:`"Já tentei algo parecido e não funcionou"`,
+      script:`Entendo — e isso é uma preocupação legítima.<br><br>
+Me conta: o que você tentou? E por que você acha que não funcionou?<br><br>
+<em>[Escute com atenção. Identifique: foi falta de execução? Método ruim? Falta de suporte?]</em><br><br>
+A diferença aqui é que o Eduardo não é um consultor externo que entrega um relatório e some. Ele é um <strong>dono de academia</strong> que usa esse processo hoje, nas próprias unidades dele.<br><br>
+E o programa inclui implementação acompanhada — não é conteúdo que você assiste sozinho. Então o risco de "tentei e não funcionou" fica muito menor quando tem alguém do lado garantindo a execução.<br><br>
+Além da garantia de resultado.`,
+      tip:`A objeção "já tentei" vem de experiências ruins anteriores. Diferencie pelo que faz o método LG único: o empresário implementou no próprio negócio, é suportado, e tem garantia.`
+    },
+    {
+      id:'compromisso', label:'😰 É muito compromisso',
+      title:`"É muito compromisso / comprometimento"`,
+      script:`Me diz: o que exatamente parece muito?<br><br>
+<em>[Escute. Pode ser tempo, dinheiro, mudança de hábito ou assumir compromisso perante a equipe.]</em><br><br>
+${nome}, posso te fazer uma pergunta direta?<br><br>
+Se você não assumir esse compromisso agora — com um método, com um processo, com uma mudança real — o que vai mudar na sua academia nos próximos 12 meses?<br><br>
+O compromisso sempre parecerá grande quando comparado a <strong>não fazer nada</strong>. Mas não fazer nada também é uma escolha — com consequências.`,
+      tip:`"Muito compromisso" = medo de falhar ou de não executar. Redirecione para o custo da inação. O compromisso com o programa é menor que o compromisso com o problema atual.`
+    },
+  ];
+}
+
+// ══════════════════════════════════════════
+// GLOBAL SIGNALS (all phases combined)
+// ══════════════════════════════════════════
+const ALL_SIGNALS = [
+  { id: 'hora-livre', label: 'Confirmou 1h livre' },
+  { id: 'decisores-ok', label: 'Todos decisores presentes' },
+  { id: 'desafio-ok', label: 'Desafio validado' },
+  { id: 'dor-oculta', label: 'Dor oculta identificada' },
+  { id: 'roi-calculado', label: 'Lead calculou ROI próprio' },
+  { id: 'fez-conta', label: 'Fez conta mental no ICV' },
+  { id: 'se-visualizou', label: 'Se visualizou nos resultados' },
+  { id: 'preco-ok', label: 'Aceitou o investimento' },
+  { id: 'fechou', label: '✅ FECHOU O NEGÓCIO' },
+];
+
+// ══════════════════════════════════════════
+// RENDER PHASE LIST (SIDEBAR)
+// ══════════════════════════════════════════
+function renderSidebar() {
+  const phases = getPhases();
+  const el = document.getElementById('phase-list');
+  el.innerHTML = phases.map((p, i) => `
+    <div class="ph-item ${i === currentPhase ? 'active' : ''} ${done.has(i) && i !== currentPhase ? 'done' : ''}"
+         onclick="goPhase(${i})">
+      <span class="ph-icon">${p.icon}</span>
+      <div class="ph-info" style="flex:1;min-width:0">
+        <div class="ph-name">${p.name}</div>
+        <div class="ph-dur">${p.dur}</div>
+      </div>
+      <span class="ph-ck">✓</span>
+    </div>
+  `).join('');
+}
+
+// ══════════════════════════════════════════
+// RENDER MAIN CONTENT
+// ══════════════════════════════════════════
+function renderMain() {
+  const phases = getPhases();
+  const p = phases[currentPhase];
+  const el = document.getElementById('main-content');
+
+  // Last phase: closing screen
+  if (currentPhase >= phases.length) { renderClosing(); return; }
+
+  let html = `
+    <div class="ph-hdr">
+      <div class="ph-hdr-icon">${p.icon}</div>
+      <div>
+        <div class="ph-tag">${p.cancelConditions ? '🚨 Pré-reunião' : `Fase ${currentPhase}/${phases.length - 1}`}</div>
+        <div class="ph-title">${p.name}</div>
+        <div class="ph-sub">⏱ ${p.dur}</div>
+      </div>
+    </div>`;
+
+  if (p.slides) {
+    html += `<div class="slide-ref">📽 <span>Apresentação: <strong>${p.slides}</strong> — avance o deck para este ponto</span></div>`;
+  }
+
+  // Cancel conditions phase
+  if (p.cancelConditions) {
+    html += `<div class="info-blk warn" style="margin-bottom:18px">⚠️ <strong>Verifique estas condições ANTES de iniciar a apresentação.</strong> Se qualquer condição abaixo for identificada, aplique a ação correspondente.</div>`;
+    p.cancelConditions.forEach((c, i) => {
+      const acBg = c.actionType === 'cancel'
+        ? 'rgba(239,68,68,.08)' : 'rgba(245,158,11,.06)';
+      const acBorder = c.actionType === 'cancel'
+        ? 'rgba(239,68,68,.25)' : 'rgba(245,158,11,.22)';
+      const acColor = c.actionType === 'cancel' ? '#fca5a5' : '#fcd34d';
+      const acIcon = c.actionType === 'cancel' ? '🚫' : '🔄';
+      html += `
+      <div style="background:var(--surface2);border:1px solid var(--border);border-left:3px solid ${c.actionType==='cancel'?'var(--red)':'var(--amber)'};border-radius:10px;padding:16px 18px;margin-bottom:12px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--text)">
+            ${c.actionType==='cancel'?'🚫':'⚠️'} ${c.title}
+          </div>
+          <div style="padding:3px 10px;border-radius:100px;background:${acBg};border:1px solid ${acBorder};color:${acColor};font-size:10px;font-weight:700;font-family:'DM Mono',monospace;white-space:nowrap;">
+            ${acIcon} ${c.action}
+          </div>
+        </div>
+        <div style="font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:${c.message?'10px':'0'}">
+          📋 ${c.rule}
+        </div>
+        ${c.message ? `<div style="background:var(--script-bg);border:1px solid rgba(22,199,132,.15);border-radius:7px;padding:12px 15px;font-style:italic;font-size:13px;color:#92c9a8;line-height:1.7;">
+          <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--green);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;font-style:normal;">🎙 FALE ISSO</span>
+          ${c.message}
+        </div>` : ''}
+      </div>`;
+    });
+  }
+
+  // Questions phase (DI)
+  if (p.questions) {
+    html += `<div class="script-blk"><span class="s-lbl">🎙 SEQUÊNCIA DE PERGUNTAS — FAÇA NA ORDEM</span>
+      <div class="s-txt">Nessa fase você pergunta e <strong>escuta</strong>. Não apresente soluções ainda. O objetivo é fazer o lead sentir o peso do problema na própria fala.</div></div>`;
+    html += `<div class="q-list">`;
+    p.questions.forEach(q => {
+      html += `<div class="q-item">
+        <span class="q-num">Pergunta ${q.n}</span>
+        <div class="q-text">"${q.q}"</div>
+        <div class="q-tip">💡 ${q.tip}</div>
+      </div>`;
+    });
+    html += `</div>`;
+  } else if (p.script) {
+    html += `<div class="script-blk"><span class="s-lbl">🎙 FALE ISSO</span>
+      <div class="s-txt">${p.script}</div></div>`;
+  }
+
+  if (p.listen && p.listen.length) {
+    html += `<div class="listen-blk"><span class="l-lbl">👁 OBSERVE & OUÇA</span><ul class="l-list">`;
+    p.listen.forEach(l => { html += `<li>${l}</li>`; });
+    html += `</ul></div>`;
+  }
+
+  // Anchor at investment phase
+  if (currentPhase === getPhases().length - 3) {
+    const anc = anchorCalc(ld);
+    if (anc) {
+      html += `<div class="info-blk">⚓ <strong>Use a âncora:</strong> "Você me disse que quer crescer o faturamento. O programa custa ${anc.ticket.toLocaleString('pt-BR')} reais — se você crescer só ${Math.round(anc.ticket/anc.fat * 100)}% do faturamento atual, o programa já se paga no primeiro mês."</div>`;
+    }
+  }
+
+  // Nav
+  html += `<div class="ph-nav">`;
+  if (currentPhase > 0) html += `<button class="btn-prv" onclick="prevPhase()">← Anterior</button>`;
+  if (currentPhase < phases.length - 1) {
+    html += `<button class="btn-nxt" onclick="nextPhase()">Próxima Fase →</button>`;
+  } else {
+    html += `<button class="btn-nxt done-btn" onclick="showClosing()">✅ Encerrar Reunião</button>`;
+  }
+  html += `</div>`;
+
+  el.innerHTML = html;
+
+  // Render signals for this phase
+  renderSignalsPanel(p.signals || []);
+}
+
+function renderSignalsPanel(phaseSignals) {
+  const el = document.getElementById('signals-panel');
+  const allSigs = [...phaseSignals];
+  if (!allSigs.length) { el.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:4px 0">Nenhum sinal nessa fase</div>'; return; }
+  el.innerHTML = allSigs.map(s => `
+    <div class="sig-item">
+      <div class="sig-lbl">${s.label}</div>
+      <div class="sig-tog">
+        <button class="sig-btn y ${signals[s.id]==='y'?'on':''}" onclick="setSig('${s.id}','y')">✓</button>
+        <button class="sig-btn n ${signals[s.id]==='n'?'on':''}" onclick="setSig('${s.id}','n')">✗</button>
+      </div>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════
+// RENDER LEAD PANEL
+// ══════════════════════════════════════════
+function renderLeadPanel() {
+  const el = document.getElementById('lead-panel-data');
+  if (!ld) { el.innerHTML = '<div style="font-size:12px;color:var(--muted)">Nenhum lead</div>'; return; }
+  const fatMap = {'10000':'Até R$10k','20000':'R$10-20k','30000':'R$20-30k','50000':'R$30-50k',
+                  '80000':'R$50-80k','120000':'R$80-120k','200000':'R$120-200k','300000':'>R$200k'};
+  el.innerHTML = `
+    <div class="data-row"><span class="d-lbl">Nome</span><span class="d-val ok">${ld.nome||'—'}</span></div>
+    <div class="data-row"><span class="d-lbl">Academia</span><span class="d-val">${ld.empresa||'—'}</span></div>
+    <div class="data-row"><span class="d-lbl">Fat.</span><span class="d-val">${fatMap[ld.faturamento]||ld.faturamento||'—'}</span></div>
+    <div class="data-row"><span class="d-lbl">Desafio</span><span class="d-val warn">${ld.desafio||'—'}</span></div>
+    <div class="data-row"><span class="d-lbl">Dor oculta</span><span class="d-val" style="color:#c084fc">${ld.dor||'Não mapeada'}</span></div>
+    <div class="data-row"><span class="d-lbl">Produto</span><span class="d-val ok">${(ld.produto||'—').split('—')[0]}</span></div>
+    <div class="data-row"><span class="d-lbl">Chance SDR</span><span class="d-val ${parseInt(ld.chanceCompra)>=60?'ok':parseInt(ld.chanceCompra)>=35?'warn':'bad'}">${ld.chanceCompra||'—'}%</span></div>
+    ${ld.motivo ? `<div class="data-row"><span class="d-lbl">Diagnóstico</span><span class="d-val" style="font-size:10.5px;color:var(--muted)">${(ld.motivo||'').substring(0,80)}...</span></div>` : ''}
+  `;
+
+  // Anchor panel
+  const anc = anchorCalc(ld);
+  const ap = document.getElementById('anchor-panel');
+  if (anc) {
+    ap.style.display = 'block';
+    const fatMensal = parseInt(ld.faturamento)||0;
+    const ticket = ticketProduto(ld);
+    document.getElementById('anchor-box').innerHTML = `
+      <div class="anchor-row"><span>Faturamento atual</span><span>${fatMensal.toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0})}</span></div>
+      <div class="anchor-row"><span>Ticket do programa</span><span>${ticket.toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0})}</span></div>
+      <div class="anchor-row"><span>% do faturamento</span><span>${((ticket/fatMensal)*100).toFixed(1)}%</span></div>
+      <div class="anchor-row"><span>Payback estimado</span><span>${anc.payback ? anc.payback+' meses' : 'N/A'}</span></div>
+    `;
+  } else {
+    ap.style.display = 'none';
+  }
+}
+
+// ══════════════════════════════════════════
+// RENDER CLOSING SCREEN
+// ══════════════════════════════════════════
+function renderClosing() {
+  const fechou = signals['fechou'] === 'y';
+  const el = document.getElementById('main-content');
+  el.innerHTML = `
+    <div class="close-scr">
+      <div class="close-icon">${fechou ? '🎉' : '📋'}</div>
+      <div class="close-title">${fechou ? 'Negócio Fechado!' : 'Reunião Encerrada'}</div>
+      <div class="close-sub">${fechou ? `Parabéns! ${ld?.nome||''} entrou no ${ld?.produto?.split('—')[0]||'programa'}.` : 'Registre o resultado e próximos passos.'}</div>
+      <div class="close-grid">
+        <div class="close-card">
+          <div class="close-card-lbl">Lead</div>
+          <div class="close-card-val">${ld?.nome||'—'}</div>
+        </div>
+        <div class="close-card">
+          <div class="close-card-lbl">Resultado</div>
+          <div class="close-card-val" style="color:${fechou?'var(--green)':'var(--amber)'}">${fechou?'✅ Fechou':'⏳ Pendente'}</div>
+        </div>
+        <div class="close-card">
+          <div class="close-card-lbl">Produto</div>
+          <div class="close-card-val" style="font-size:12px">${ld?.produto?.split('—')[0]||'—'}</div>
+        </div>
+        <div class="close-card">
+          <div class="close-card-lbl">Tempo de reunião</div>
+          <div class="close-card-val">${document.getElementById('timer').textContent}</div>
+        </div>
+      </div>
+      <div class="close-actions">
+        <button class="btn-cls main" onclick="exportSummary()">⬇️ Exportar Resumo</button>
+        <button class="btn-cls" onclick="copyWhatsapp()">📲 WhatsApp</button>
+        <button class="btn-cls" onclick="newMeeting()">+ Nova Reunião</button>
+      </div>
+    </div>`;
+}
+
+// ══════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════
+function goPhase(i) {
+  done.add(currentPhase);
+  currentPhase = i;
+  renderSidebar();
+  renderMain();
+  document.getElementById('main-content').scrollTop = 0;
+}
+function nextPhase() { goPhase(currentPhase + 1); }
+function prevPhase() { if (currentPhase > 0) goPhase(currentPhase - 1); }
+function showClosing() {
+  done.add(currentPhase);
+  currentPhase = getPhases().length;
+  renderSidebar();
+  renderClosing();
+}
+
+// ══════════════════════════════════════════
+// SIGNALS & TEMPERATURE
+// ══════════════════════════════════════════
+function setSig(id, val) {
+  signals[id] = signals[id] === val ? null : val;
+  const phases = getPhases();
+  if (currentPhase < phases.length) renderSignalsPanel(phases[currentPhase].signals || []);
+}
+function setTemp(v) {
+  temperature = temperature === v ? 0 : v;
+  const colors = ['','var(--red)','var(--amber)','var(--green)','var(--blue)'];
+  const labels = ['','❄️ Frio — não engajado','😐 Morno — interesse moderado','🔥 Quente — quer comprar','💳 Comprando — só falta fechar'];
+  const pcts = ['0','25','55','80','100'];
+  const fill = document.getElementById('temp-fill');
+  fill.style.width = pcts[temperature]+'%';
+  fill.style.background = colors[temperature]||'var(--muted)';
+  document.getElementById('temp-status').textContent = labels[temperature]||'Aguardando avaliação';
+  for(let i=1;i<=4;i++){
+    document.getElementById('t'+i).className = 'temp-opt' + (temperature===i ? ` on-${i}` : '');
+  }
+}
+
+// ══════════════════════════════════════════
+// OBJECTION MODAL
+// ══════════════════════════════════════════
+let currentObj = null;
+function openObj() {
+  const objs = getObjections();
+  const listEl = document.getElementById('obj-list');
+  listEl.innerHTML = objs.map(o => `
+    <div class="obj-it ${currentObj===o.id?'on':''}" onclick="selectObj('${o.id}')">
+      ${o.label}
+    </div>`).join('');
+  document.getElementById('obj-overlay').classList.add('open');
+  if (currentObj) renderObjDetail(currentObj);
+}
+function closeObj() { document.getElementById('obj-overlay').classList.remove('open'); }
+function selectObj(id) {
+  currentObj = id;
+  document.querySelectorAll('.obj-it').forEach(el => el.classList.remove('on'));
+  event.currentTarget.classList.add('on');
+  renderObjDetail(id);
+}
+function renderObjDetail(id) {
+  const obj = getObjections().find(o => o.id === id);
+  if (!obj) return;
+  document.getElementById('obj-detail').innerHTML = `
+    <div class="obj-title">${obj.title}</div>
+    <div class="obj-script">${obj.script}</div>
+    <div class="obj-tip"><strong>💡 Insight do Closer:</strong> ${obj.tip}</div>`;
+}
+
+// ══════════════════════════════════════════
+// TIMER
+// ══════════════════════════════════════════
+function toggleTimer() {
+  if (timerRunning) {
+    clearInterval(timerInterval);
+    timerRunning = false;
+  } else {
+    timerRunning = true;
+    timerInterval = setInterval(() => {
+      timerSec++;
+      const m = String(Math.floor(timerSec/60)).padStart(2,'0');
+      const s = String(timerSec%60).padStart(2,'0');
+      const el = document.getElementById('timer');
+      el.textContent = `${m}:${s}`;
+      el.className = 'timer' + (timerSec > 3600 ? ' danger' : timerSec > 2700 ? ' warn' : '');
+    }, 1000);
+  }
+}
+
+// ══════════════════════════════════════════
+// LEAD SELECTION
+// ══════════════════════════════════════════
+function loadLeads() {
+  try { return JSON.parse(localStorage.getItem('gfb_leads') || '[]'); }
+  catch(e) { return []; }
+}
+function renderLeadCards() {
+  const leads = loadLeads().filter(l => l.resultado === 'agendar' || l.resultado === 'cautela');
+  const el = document.getElementById('lead-cards-list');
+  if (!leads.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div><div>Nenhum lead qualificado encontrado.<br>Use o SDR IA para qualificar leads primeiro, ou use a entrada manual.</div></div>`;
+    return;
+  }
+  const scoreColor = s => parseInt(s) >= 60 ? 'var(--green)' : parseInt(s) >= 35 ? 'var(--amber)' : 'var(--red)';
+  el.innerHTML = [...leads].reverse().map(l => `
+    <div class="lc-card" onclick="startWithLead(${l.id})">
+      <div class="lcc-info">
+        <div class="lcc-name">${l.nome||'—'}</div>
+        <div class="lcc-meta">${l.empresa||'—'} · ${(l.produto||'').split('—')[0]}</div>
+      </div>
+      <div class="lcc-score" style="color:${scoreColor(l.chanceCompra)}">${l.chanceCompra||'?'}%</div>
+    </div>`).join('');
+}
+function startWithLead(id) {
+  const leads = loadLeads();
+  const l = leads.find(x => x.id === id);
+  if (!l) return;
+  ld = l;
+  initMeeting();
+}
+function startManual() {
+  const nome = document.getElementById('mf-nome').value.trim();
+  const empresa = document.getElementById('mf-empresa').value.trim();
+  if (!nome || !empresa) { alert('Preencha nome e academia.'); return; }
+  ld = {
+    nome, empresa,
+    faturamento: document.getElementById('mf-fat').value,
+    produto: document.getElementById('mf-produto').value,
+    desafio: document.getElementById('mf-desafio').value.trim(),
+    dor: document.getElementById('mf-dor').value.trim(),
+    motivo: document.getElementById('mf-obs').value.trim(),
+    chanceCompra: '—',
+    resultado: 'manual'
+  };
+  initMeeting();
+}
+function initMeeting() {
+  document.getElementById('lead-sel-screen').style.display = 'none';
+  document.getElementById('layout').style.display = 'grid';
+
+  // Update header
+  document.getElementById('chip-name').textContent = ld.nome;
+  document.getElementById('chip-meta').textContent = ld.empresa;
+  const pill = document.getElementById('chip-pill');
+  pill.style.display = 'block';
+  const p = ld.produto || '';
+  pill.className = 'produto-pill ' + pillClass(p);
+  pill.textContent = p.includes('Black') ? 'Black Belt' : p.includes('PAV') ? 'PAV' : 'Acelerador';
+
+  currentPhase = 0;
+  done.clear();
+  signals = {};
+  temperature = 0;
+
+  renderSidebar();
+  renderMain();
+  renderLeadPanel();
+  toggleTimer(); // auto-start
+}
+
+function switchTab(t) {
+  ['sdr','csv','manual'].forEach(id => {
+    document.getElementById('tab-'+id).className = 'tab-btn' + (t===id?' on':'');
+    const body = document.getElementById('tab-'+id+'-body');
+    if (body) body.style.display = t===id ? 'block' : 'none';
+  });
+}
+
+
+// ══════════════════════════════════════════
+// TXT PARSER — GFB Script de Qualificação
+// ══════════════════════════════════════════
+function parseTXTScript(text) {
+  const get = (label) => {
+    const re = new RegExp(label + '[:\\s]+(.+)', 'i');
+    const m = text.match(re);
+    return m ? m[1].trim() : '';
+  };
+
+  const getBlock = (startLabel, endLabel) => {
+    const re = new RegExp(startLabel + '[\\s\\S]*?\\n([\\s\\S]*?)(?=\\n' + endLabel + '|\\n[─═]{10}|$)', 'i');
+    const m = text.match(re);
+    return m ? m[1].trim() : '';
+  };
+
+  const nome     = get('LEAD');
+  const empresa  = get('EMPRESA');
+  const telefone = get('TELEFONE');
+  const origem   = get('ORIGEM');
+
+  // Faturamento — handles "R$30-50k", "R$50.000", "até R$10k", etc.
+  const fatRaw = get('Faturamento Mensal').toLowerCase().replace(/\s/g,'');
+  let faturamento = '';
+  if      (fatRaw.includes('200k') || fatRaw.includes('200.000')) faturamento = '300000';
+  else if (fatRaw.includes('120') || fatRaw.includes('120k'))     faturamento = '200000';
+  else if (fatRaw.includes('80')  || fatRaw.includes('80k'))      faturamento = '120000';
+  else if (fatRaw.includes('50')  || fatRaw.includes('50k'))      faturamento = '80000';
+  else if (fatRaw.includes('30')  || fatRaw.includes('40k'))      faturamento = '50000';
+  else if (fatRaw.includes('20')  || fatRaw.includes('20k'))      faturamento = '30000';
+  else if (fatRaw.includes('10')  || fatRaw.includes('10k'))      faturamento = '20000';
+  else faturamento = '10000';
+
+  const produto  = get('PRODUTO RECOMENDADO');
+  const chance   = get('CHANCE DE COMPRA').replace('%','').trim();
+  const desafio  = get('MAIOR DESAFIO');
+  const dor      = get('DOR OCULTA');
+  const negocio  = get('NEGÓCIO') || get('NEGOCIO');
+  const forma    = get('FORMA DE NEGOCIAÇÃO') || get('FORMA DE NEGOCIACAO');
+  const decisao  = get('DECISÃO') || get('DECISAO');
+
+  // resultado: agendar / cautela / encerrar
+  let resultado = 'agendar';
+  if (decisao.toLowerCase().includes('cautela')) resultado = 'cautela';
+  else if (decisao.toLowerCase().includes('não agendar') || decisao.toLowerCase().includes('encerrar')) resultado = 'encerrar';
+
+  if (!nome || resultado === 'encerrar') return null;
+
+  return {
+    id: Date.now() + Math.random(),
+    nome, empresa, telefone, origem,
+    faturamento,
+    produto,
+    chanceCompra: chance,
+    desafio,
+    dor,
+    negocio,
+    forma,
+    resultado,
+    origem2: 'txt-import',
+  };
+}
+
+let importedLeads = [];
+
+function handleDragOver(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.add('drag-over');
+}
+function handleDragLeave(e) {
+  document.getElementById('upload-zone').classList.remove('drag-over');
+}
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.remove('drag-over');
+  const files = e.dataTransfer.files;
+  if (files.length) processFiles(files);
+}
+function handleFileInput(e) {
+  const files = e.target.files;
+  if (files.length) processFiles(files);
+}
+
+function processFiles(files) {
+  const statusEl = document.getElementById('upload-status');
+  const fileArr = Array.from(files);
+  let results = [];
+  let done = 0;
+
+  fileArr.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const lead = parseTXTScript(e.target.result);
+      if (lead) results.push(lead);
+      done++;
+      if (done === fileArr.length) {
+        if (!results.length) {
+          statusEl.className = 'upload-status err';
+          statusEl.innerHTML = '⚠️ Nenhum lead qualificado encontrado. Verifique se é o arquivo TXT exportado pelo SDR IA.';
+          document.getElementById('import-cards-list').innerHTML = '';
+        } else {
+          importedLeads = results;
+          statusEl.className = 'upload-status ok';
+          statusEl.innerHTML = `✅ ${results.length} lead${results.length>1?'s':''} importado${results.length>1?'s':''} com sucesso — selecione um para iniciar a reunião.`;
+          renderImportCards(results);
+        }
+      }
+    };
+    reader.onerror = () => {
+      done++;
+      if (done === fileArr.length && !results.length) {
+        statusEl.className = 'upload-status err';
+        statusEl.innerHTML = '❌ Erro ao ler o arquivo.';
+      }
+    };
+    reader.readAsText(file, 'utf-8');
+  });
+}
+
+function renderImportCards(leads) {
+  const el = document.getElementById('import-cards-list');
+  const scoreColor = s => {
+    const n = parseInt(s);
+    return isNaN(n) ? 'var(--muted)' : n >= 60 ? 'var(--green)' : n >= 35 ? 'var(--amber)' : 'var(--red)';
+  };
+  const resLabel = r => r === 'cautela' ? '⚠️' : '✅';
+  el.innerHTML = leads.map((l, i) => `
+    <div class="lc-card" onclick="startWithImportedLead(${i})">
+      <div class="lcc-info">
+        <div class="lcc-name">${l.nome||'—'}</div>
+        <div class="lcc-meta">${l.empresa||'—'} · ${(l.produto||'').split('—')[0]} ${resLabel(l.resultado)}</div>
+      </div>
+      <div class="lcc-score" style="color:${scoreColor(l.chanceCompra)}">${l.chanceCompra||'?'}%</div>
+    </div>`).join('');
+}
+
+function startWithImportedLead(index) {
+  ld = importedLeads[index];
+  initMeeting();
+}
+
+// ══════════════════════════════════════════
+// EXPORT
+// ══════════════════════════════════════════
+function buildSummary() {
+  const fechou = signals['fechou'] === 'y';
+  const notes = document.getElementById('meeting-notes').value;
+  const tempLabels = ['','❄️ Frio','😐 Morno','🔥 Quente','💳 Comprando'];
+  const posSignals = ALL_SIGNALS.filter(s => signals[s.id] === 'y').map(s => '  ✅ '+s.label).join('\n');
+
+  return `════════════════════════════════════════
+   GFB — RESUMO DE REUNIÃO CLOSER
+   ${new Date().toLocaleString('pt-BR')}
+════════════════════════════════════════
+
+LEAD: ${ld?.nome||'—'}
+ACADEMIA: ${ld?.empresa||'—'}
+PRODUTO: ${ld?.produto||'—'}
+RESULTADO: ${fechou ? '✅ FECHOU' : '⏳ PENDENTE'}
+TEMPERATURA: ${tempLabels[temperature]||'Não avaliado'}
+TEMPO DE REUNIÃO: ${document.getElementById('timer').textContent}
+
+────────────────────────────────────────
+SINAIS DE COMPRA IDENTIFICADOS
+────────────────────────────────────────
+${posSignals || 'Nenhum sinal registrado'}
+
+────────────────────────────────────────
+ANOTAÇÕES DA REUNIÃO
+────────────────────────────────────────
+${notes || 'Sem anotações'}
+
+────────────────────────────────────────
+DADOS DO LEAD
+────────────────────────────────────────
+Desafio: ${ld?.desafio||'—'}
+Dor oculta: ${ld?.dor||'Não mapeada'}
+Faturamento: ${ld?.faturamento ? ('R$'+parseInt(ld.faturamento).toLocaleString('pt-BR')) : '—'}
+Chance SDR: ${ld?.chanceCompra||'—'}%
+
+════════════════════════════════════════
+   Gestão Fitness Brasil — GFB
+════════════════════════════════════════`;
+}
+function exportSummary() {
+  const text = buildSummary();
+  const blob = new Blob([text], {type:'text/plain;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `GFB_Reuniao_${(ld?.nome||'lead').replace(/\s+/g,'_')}_${new Date().toLocaleDateString('pt-BR').replace(/\//g,'-')}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+function copyWhatsapp() {
+  const fechou = signals['fechou'] === 'y';
+  const notes = document.getElementById('meeting-notes').value;
+  const msg = `📋 *RESULTADO DE REUNIÃO — GFB*\n\n*Lead:* ${ld?.nome||'—'}\n*Academia:* ${ld?.empresa||'—'}\n*Produto:* ${ld?.produto?.split('—')[0]||'—'}\n*Resultado:* ${fechou?'✅ FECHOU':'⏳ Pendente'}\n*Temperatura:* ${['','❄️ Frio','😐 Morno','🔥 Quente','💳 Comprando'][temperature]||'—'}\n*Duração:* ${document.getElementById('timer').textContent}\n\n*Anotações:*\n${notes||'—'}`;
+  navigator.clipboard.writeText(msg).then(() => alert('Copiado!')).catch(() => prompt('Copie:', msg));
+}
+function newMeeting() {
+  if (timerRunning) clearInterval(timerInterval);
+  timerRunning = false; timerSec = 0;
+  document.getElementById('timer').textContent = '00:00';
+  document.getElementById('timer').className = 'timer';
+  document.getElementById('meeting-notes').value = '';
+  document.getElementById('layout').style.display = 'none';
+  document.getElementById('lead-sel-screen').style.display = 'block';
+  document.getElementById('chip-pill').style.display = 'none';
+  document.getElementById('chip-name').textContent = 'Nenhum lead carregado';
+  document.getElementById('chip-meta').textContent = '—';
+  ld = null; currentPhase = 0; done.clear(); signals = {}; temperature = 0;
+  renderLeadCards();
+}
+
+// ══════════════════════════════════════════
+// KEYBOARD SHORTCUTS
+// ══════════════════════════════════════════
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
+  if (e.key === 'ArrowRight' && document.getElementById('layout').style.display !== 'none') nextPhase();
+  if (e.key === 'ArrowLeft' && document.getElementById('layout').style.display !== 'none') prevPhase();
+  if (e.key === 'o' || e.key === 'O') openObj();
+  if (e.key === 'Escape') closeObj();
+});
+
+// ══════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════
+renderLeadCards();
+</script>
+</body>
+</html>
